@@ -9,7 +9,8 @@
 <p align="center">
   <a href="https://brazai.vercel.app"><b>▶ Demo ao vivo · Painel (entre como visitante)</b></a>
   &nbsp;·&nbsp;
-  <a href="https://brazai.vercel.app/cardapio/atelier-gastronomico"><b>📱 Cardápio do cliente</b></a>
+  <a href="https://brazai.vercel.app/cardapio/atelier-gastronomico"><b>📱 Cardápio do cliente</b></a><br/>
+  <i>Live demo · Owner panel (log in as a visitor) &nbsp;·&nbsp; Customer menu</i>
 </p>
 
 <p align="center">
@@ -25,7 +26,7 @@
 
 ---
 
-## ✨ Visão geral
+## ✨ Visão geral · Overview
 
 O **BrazAI** é um sistema de delivery onde **cada restaurante é um _tenant_ com dados
 totalmente isolados** — cardápio, pedidos e configurações próprios. O dono acompanha os
@@ -40,39 +41,58 @@ A WhatsApp AI ordering agent is in progress.*
 > 📌 Este é o **repositório-vitrine** do projeto. O código-fonte completo é **privado**
 > (produto comercial — as licenças de uso são vendidas). Aqui ficam a **demo ao vivo**,
 > **capturas de tela**, a **arquitetura** e **trechos curados** do código.
+>
+> *This is the project's **showcase repository**. The full source code is **private**
+> (commercial product — usage licences are sold). Here you'll find the **live demo**,
+> **screenshots**, the **architecture** and **curated code excerpts**.*
 
 ---
 
 ## 🧱 Stack
 
-| Camada | Tecnologias |
+| Camada · Layer | Tecnologias · Technologies |
 |---|---|
 | **Backend** | Python · Django · Django REST Framework · JWT (SimpleJWT) |
 | **Frontend** | React · TypeScript · Vite · Material UI · React Query · Zustand |
-| **IA / WhatsApp** 🚧 | Meta WhatsApp Cloud API · LLM plugável (Groq / Gemini) com _function calling_ — **em construção** |
-| **Banco** | PostgreSQL |
-| **Qualidade** | 105 testes de backend · checagem de tipos (`tsc`) · Vitest |
+| **IA / WhatsApp** 🚧 | Meta WhatsApp Cloud API · LLM plugável (Groq / Gemini) com _function calling_ — **em construção**<br/>*Meta WhatsApp Cloud API · pluggable LLM (Groq / Gemini) with function calling — **work in progress*** |
+| **Banco · Database** | PostgreSQL |
+| **Qualidade · Quality** | 105 testes de backend · checagem de tipos (`tsc`) · Vitest<br/>*105 backend tests · type checking (`tsc`) · Vitest* |
 | **Deploy** | Vercel (front) · Render (API) · Supabase (DB) |
 
 ---
 
-## 🏛️ Arquitetura & destaques
+## 🏛️ Arquitetura & destaques · Architecture & highlights
 
 - **Multi-tenancy** (_shared-schema_): coluna `tenant` em todas as tabelas + um
   `TenantFilterMixin` que **isola os dados de cada restaurante automaticamente**, sem
-  repetir filtros em cada view.
+  repetir filtros em cada view.<br/>
+  *A `tenant` column on every table + a `TenantFilterMixin` that **isolates each
+  restaurant's data automatically**, with no filters repeated in every view.*
 - **Máquina de estados dos pedidos**: `RECEBIDO → ACEITO → EM_PREPARO → A_CAMINHO →
-  CONCLUÍDO` (+ `CANCELADO`), com transições validadas no backend.
+  CONCLUÍDO` (+ `CANCELADO`), com transições validadas no backend.<br/>
+  ***Order state machine**: received → accepted → preparing → on the way → completed
+  (+ cancelled), with transitions validated on the backend.*
 - **Pizza meio a meio**: dois sabores num pedido, com preço pelo **sabor mais caro** ou
-  pela **média** (configurável por restaurante) — validado e "congelado" no item.
+  pela **média** (configurável por restaurante) — validado e "congelado" no item.<br/>
+  ***Half-and-half pizza**: two flavours in one item, priced by the **most expensive
+  flavour** or the **average** (configurable per restaurant) — validated and "frozen" on the
+  order item.*
 - **Agente de IA no WhatsApp** 🚧 _(em construção)_: recebe mensagens por webhook, monta o
-  pedido com _function calling_ e provider de LLM **plugável** (Groq / Gemini / mock).
+  pedido com _function calling_ e provider de LLM **plugável** (Groq / Gemini / mock).<br/>
+  ***WhatsApp AI agent** 🚧 (work in progress): receives messages via webhook, builds the
+  order with function calling and a **pluggable** LLM provider (Groq / Gemini / mock).*
 - **Modo visitante**: middleware de **somente-leitura** deixa visitantes
-  explorarem o app por dentro sem alterar os dados.
+  explorarem o app por dentro sem alterar os dados.<br/>
+  ***Visitor mode**: a **read-only** middleware lets visitors explore the app from the
+  inside without changing any data.*
 - **Padrão Selectors/Services**: regra de negócio separada das views → testável sem subir
-  um request HTTP.
+  um request HTTP.<br/>
+  ***Selectors/Services pattern**: business rules kept out of the views → testable without
+  an HTTP request.*
 - **Autenticação JWT** com papéis (`SAAS_ADMIN` / `BUSINESS_ADMIN` / `OPERATOR`); datas em
-  **UTC** no banco.
+  **UTC** no banco.<br/>
+  ***JWT authentication** with roles (`SAAS_ADMIN` / `BUSINESS_ADMIN` / `OPERATOR`);
+  **UTC** datetimes in the database.*
 
 ---
 
@@ -80,11 +100,17 @@ A WhatsApp AI ordering agent is in progress.*
 
 > Amostras **curadas** (não-rodáveis) que mostram o estilo de código e as decisões de
 > arquitetura. Arquivos completos em [`snippets/`](snippets/).
+>
+> *Curated (non-runnable) samples showing the coding style and architectural decisions. Full
+> files in [`snippets/`](snippets/).*
 
-### 1. Isolamento multi-tenant — `TenantFilterMixin`
+### 1. Isolamento multi-tenant · Multi-tenant isolation — `TenantFilterMixin`
 
 Toda ViewSet que herda este mixin filtra os dados pelo restaurante do usuário logado e
 injeta o `tenant` ao criar registros. **Isolamento por construção.**
+
+*Every ViewSet that inherits this mixin filters data by the logged-in user's restaurant and
+injects the `tenant` when creating records. **Isolation by construction.***
 
 ```python
 class TenantFilterMixin:
@@ -102,10 +128,13 @@ class TenantFilterMixin:
         serializer.save(tenant=tenant)
 ```
 
-### 2. Modo visitante — `ReadOnlyVisitorMiddleware`
+### 2. Modo visitante · Visitor mode — `ReadOnlyVisitorMiddleware`
 
 A trava por trás do "Entrar como visitante": o visitante VÊ tudo, mas escritas são barradas
 no middleware (vale para TODAS as rotas, mesmo as com `permission_classes` próprias).
+
+*The lock behind "Log in as a visitor": the visitor SEES everything, but writes are blocked
+in the middleware (it applies to ALL routes, even those with their own `permission_classes`).*
 
 ```python
 class ReadOnlyVisitorMiddleware:
@@ -119,9 +148,12 @@ class ReadOnlyVisitorMiddleware:
         return self.get_response(request)
 ```
 
-### 3. Regra do meio a meio + teste
+### 3. Regra do meio a meio + teste · Half-and-half rule + test
 
 Preço pelo sabor mais caro (MAX) ou pela média (AVG), e um teste que prova as duas regras.
+
+*Price by the most expensive flavour (MAX) or by the average (AVG), and a test that proves the
+rules.*
 
 ```python
 def half_and_half_price(settings_obj, price_a, price_b):
@@ -145,7 +177,8 @@ def test_half_and_half_uses_max_price(self):
 
 ## 🖥️ Telas · Screenshots
 
-**Cardápio do cliente** — foto, descrição, restrições e busca por item/ingrediente
+**Cardápio do cliente** — foto, descrição, restrições e busca por item/ingrediente<br/>
+***Customer menu** — photo, description, dietary restrictions and search by item/ingredient*
 
 <p><img src="assets/01-cardapio.png" alt="Cardápio do cliente" width="340"/></p>
 
@@ -153,11 +186,11 @@ def test_half_and_half_uses_max_price(self):
 
 <table>
   <tr>
-    <td width="50%" valign="top" align="center"><b>Escolha do prato + adicionais (ponto da carne)</b><br/><img src="assets/02-produto-ponto.png" alt="Ponto da carne" width="320"/></td>
-    <td width="50%" valign="top" align="center"><b>Pizza meio a meio</b><br/><img src="assets/03-meio-a-meio.png" alt="Pizza meio a meio" width="320"/></td>
+    <td width="50%" valign="top" align="center"><b>Escolha do prato + adicionais (ponto da carne)</b><br/><i>Choosing the dish + add-ons (meat doneness)</i><br/><img src="assets/02-produto-ponto.png" alt="Ponto da carne" width="320"/></td>
+    <td width="50%" valign="top" align="center"><b>Pizza meio a meio</b><br/><i>Half-and-half pizza</i><br/><img src="assets/03-meio-a-meio.png" alt="Pizza meio a meio" width="320"/></td>
   </tr>
   <tr>
-    <td valign="top" align="center"><b>Carrinho</b><br/><img src="assets/04-carrinho.png" alt="Carrinho" width="320"/></td>
+    <td valign="top" align="center"><b>Carrinho</b><br/><i>Cart</i><br/><img src="assets/04-carrinho.png" alt="Carrinho" width="320"/></td>
     <td valign="top" align="center"><b>Checkout</b><br/><img src="assets/05-checkout.png" alt="Checkout" width="320"/></td>
   </tr>
 </table>
@@ -166,11 +199,11 @@ def test_half_and_half_uses_max_price(self):
 
 <p><img src="assets/06-acompanhamento.png" alt="Acompanhamento do pedido" width="300"/></p>
 
-**Acesso & painel do restaurante · Login & owner panel** — entre em 1 clique com **"Entrar como visitante"**
+**Acesso & painel do restaurante · Login & owner panel** — entre em 1 clique com **"Entrar como visitante"** · *log in with 1 click via **"Log in as a visitor"***
 
 <table>
   <tr>
-    <td width="50%" valign="top" align="center"><b>Login (modo visitante)</b><br/><img src="assets/08-login.png" alt="Login" width="320"/></td>
-    <td width="50%" valign="top" align="center"><b>Esteira de pedidos (tempo real)</b><br/><img src="assets/07-painel-pedidos.png" alt="Painel de pedidos" width="320"/></td>
+    <td width="50%" valign="top" align="center"><b>Login (modo visitante)</b><br/><i>Login (visitor mode)</i><br/><img src="assets/08-login.png" alt="Login" width="320"/></td>
+    <td width="50%" valign="top" align="center"><b>Esteira de pedidos (tempo real)</b><br/><i>Order pipeline (real time)</i><br/><img src="assets/07-painel-pedidos.png" alt="Painel de pedidos" width="320"/></td>
   </tr>
 </table>
