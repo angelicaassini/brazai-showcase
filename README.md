@@ -170,7 +170,6 @@ def test_half_and_half_uses_max_price(self):
 
 ## 📫 Contato · Contact
 
-- 💼 LinkedIn: [angelica-assini](https://www.linkedin.com/in/angelica-assini/)
 - 📧 [assini.angelica@gmail.com](mailto:assini.angelica@gmail.com)
 
 ---
